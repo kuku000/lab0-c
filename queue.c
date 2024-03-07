@@ -158,19 +158,19 @@ bool q_delete_dup(struct list_head *head)
         return false;
     struct list_head *cur = head->next;
     struct list_head *pre_cur;
+    int count = 0;
     for (; cur != head->prev; cur = cur->next) {
-        int count = 0;
-        for (pre_cur = cur->next; pre_cur != head->prev;
-             pre_cur = pre_cur->next) {
-            if (list_entry(cur, element_t, list)->value ==
-                list_entry(pre_cur, element_t, list)->value) {
+        if (count > 0) {
+            list_del(cur->prev);
+            q_release_element(list_entry(cur->prev, element_t, list));
+        }
+        count = 0;
+        for (pre_cur = cur->next; pre_cur != head; pre_cur = pre_cur->next) {
+            if (strcmp(list_entry(cur, element_t, list)->value,
+                       list_entry(pre_cur, element_t, list)->value) == 0) {
                 list_del(pre_cur);
                 q_release_element(list_entry(pre_cur, element_t, list));
                 count++;
-            }
-            if (count > 0) {
-                list_del(cur);
-                q_release_element(list_entry(cur, element_t, list));
             }
         }
     }
@@ -228,17 +228,70 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
+struct list_head *mergeTwoList(struct list_head *l1, struct list_head *l2)
+{
+    struct list_head *head = NULL;
+    if (strcmp(list_entry(l1, element_t, list)->value,
+               list_entry(l2, element_t, list)->value) <= 0) {
+        head = l1;
+        l1 = l1->next;
+    } else {
+        struct list_head *temp = l1;
+        l1 = l2;
+        l2 = temp;
+        head = l1;
+        l1 = l1->next;
+    }
+    list_del_init(head);
+    while (l1->next != head && l2->next != head) {
+        if (strcmp(list_entry(l1, element_t, list)->value,
+                   list_entry(l2, element_t, list)->value) <= 0) {
+            l1 = l1->next;
+            list_move_tail(l1->prev, head);
+
+        } else {
+            l2 = l2->next;
+            list_move_tail(l2->prev, head);
+        }
+    }
+    if (l1->next != head) {
+        while (l1->next != head) {
+            l1 = l1->next;
+            list_move_tail(l1->prev, head);
+        }
+    } else {
+        while (l2->next != head) {
+            l2 = l2->next;
+            list_move_tail(l2->prev, head);
+        }
+    }
+    return head;
+}
+
 /* Sort elements of queue in ascending/descending order */
+struct list_head *mergeTwoList(struct list_head *list1,
+                               struct list_head *list2);
 void q_sort(struct list_head *head, bool descend)
 {
-    /*
-    if (!head || list_empty(head))
+    if (!head || list_empty(head) || list_is_singular(head))
         return;
-    struct list_head *cur;
-    list_for_each(cur, head)
-    {
-
-    } */
+    struct list_head *list[100000];
+    struct list_head *cur, *safe;
+    int count = 0;
+    int size = q_size(head);
+    list_for_each_safe (cur, safe, head) {
+        list[count] = cur;
+        list_del_init(list[count]);
+        count++;
+    }
+    for (int interval = 1; interval < size; interval *= 2) {
+        for (int i = 0; i + interval < size; i += interval * 2) {
+            list[i] = mergeTwoList(list[i], list[i + interval]);
+        }
+    }
+    INIT_LIST_HEAD(head);
+    list_add_tail(head, list[0]);
+    return;
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
