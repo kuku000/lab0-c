@@ -296,18 +296,74 @@ void q_sort(struct list_head *head, bool descend)
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
+/*int q_ascend(struct list_head *head)
+{
+    if(!head || list_empty(head))
+        return 0;
+    if(list_is_singular(head))
+        return 1;
+    struct list_head *cur = head->next;
+    while(cur->next != head){
+        struct list_head *com = cur->next, *temp;
+        while(com != head){
+            if(strcmp(list_entry(cur, element_t, list)->value, list_entry(com,
+element_t, list)->value ) > 0){ if (com->prev != head) com->prev->next =
+com->next; if (com->next != head) com->next->prev = com->prev; temp = com->next;
+                list_del_init(com);
+                q_release_element(list_entry(com, element_t, list));
+                com = temp;
+            }
+            else{
+                com = com->next;
+            }
+
+        }
+        cur = cur->next;
+    }
+    return q_size(head);
+}*/
+
 int q_ascend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    if (!head || list_empty(head))
+        return 0;
+    struct list_head *slow = head->next;
+    element_t *slow_node = list_entry(slow, element_t, list);
+    while (slow->next != head) {
+        element_t *fast_node = list_entry(slow->next, element_t, list);
+        if (strcmp(slow_node->value, fast_node->value) > 0) {
+            list_del(&fast_node->list);
+            q_release_element(fast_node);
+        } else {
+            slow = slow->next;
+        }
+    }
+    return q_size(head);
+
+    return q_size(head);
 }
+
+
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
+
 int q_descend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    if (!head || list_empty(head))
+        return 0;
+    struct list_head *slow = head->prev;
+    element_t *slow_node = list_entry(slow, element_t, list);
+    while (slow->prev != head) {
+        element_t *fast_node = list_entry(slow->prev, element_t, list);
+        if (strcmp(slow_node->value, fast_node->value) < 0) {
+            list_del(&fast_node->list);
+            q_release_element(fast_node);
+        } else {
+            slow = slow->prev;
+        }
+    }
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
