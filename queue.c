@@ -242,13 +242,10 @@ void q_reverseK(struct list_head *head, int k)
 {
     if (!head || list_empty(head) || k == 0)
         return;
-
     struct list_head *cur_tail = head->next;
     int rev_times = q_size(head) / k;
-
     LIST_HEAD(tmp);
     LIST_HEAD(result);
-
     for (int i = 0; i < rev_times; ++i) {
         for (int j = 0; j < k; ++j)
             cur_tail = cur_tail->next;
